@@ -52,5 +52,5 @@ tmp*
 !tmp*py
 buildout.in
 
-src/infi/monotonic_clock/__version__.py
+src/infi/monotonic_time/__version__.py
 bootstrap.py
