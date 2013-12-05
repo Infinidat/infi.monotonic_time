@@ -1,7 +1,8 @@
 # Linux-specific implementation (specifically >= 2.6.21), although the clock_getxxx are POSIX.
 # See more with man clock_gettime and man 7 time
 
-from ctypes import CDLL, Structure, c_int64, c_int32, c_long, byref, get_errno
+import ctypes
+from ctypes import CDLL, Structure, c_int64, c_int32, c_long, byref
 from sysconfig import get_config_var
 
 __all__ = ['monotonic_clock', 'time_to_monotonic', 'time_from_monotonic']
@@ -17,6 +18,20 @@ _timespec_t = None
 SEC_IN_NSEC = 10**9
 
 
+def _check_ctypes_errno():
+    # Python 2.7.2+ (default, Oct  4 2011, 20:06:09)
+    # [GCC 4.6.1] on linux2
+    # >>> import ctypes
+    # >>> ctypes.get_errno
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 1, in <module>
+    # AttributeError: 'module' object has no attribute 'get_errno'
+    try:
+        get_errno = ctypes.get_errno
+    except AttributeError:
+        raise NotImplementedError("system doesn't have ctypes.get_errno, happens on an old ubuntu")
+
+
 def _init_library():
     global _rtlib, _time_t, _timespec_t
 
@@ -26,6 +41,8 @@ def _init_library():
         _fields_ = [("tv_sec", _time_t), ("tv_nsec", c_long)]
 
     _timespec_t = timespec_t
+
+    _check_ctypes_errno()
 
     try:
         _rtlib = CDLL("librt.so")
@@ -44,7 +61,7 @@ def monotonic_clock():
 
     timespec = _timespec_t()
     if _rtlib.clock_gettime(CLOCK_MONOTONIC_RAW, byref(timespec)) != 0:
-        raise OSError(get_errno(), "clock_gettime failed")
+        raise OSError(ctypes.get_errno(), "clock_gettime failed")
 
     return timespec.tv_nsec + (timespec.tv_sec * SEC_IN_NSEC)
 
