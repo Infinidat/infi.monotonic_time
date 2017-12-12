@@ -17,7 +17,7 @@ class c_mach_timespec(ctypes.Structure):
 
 def _init_library():
     global _libc, _clock_get_time, _clock_serv
-    _libc = ctypes.CDLL("libc.dylib")
+    _libc = ctypes.CDLL("/usr/lib/libc.dylib")
     _libc.host_get_clock_service(_libc.mach_host_self(), SYSTEM_CLOCK, ctypes.byref(_clock_serv))
     _clock_get_time = _libc.clock_get_time
 
